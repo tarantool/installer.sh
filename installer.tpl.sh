@@ -14,7 +14,7 @@ if [ "${repo_type}" = "release" ]; then
   repo_path="release/"
 elif [ "${repo_type}" != "live" ]; then
   echo "Error during installing repository"
-  exit 0
+  exit 1
 fi
 
 unsupported_os ()
@@ -276,7 +276,7 @@ main ()
     echo "Setting up yum repository... "
     dist=7
     install_yum
-  elif [ ${os} = "fedora" ] && [[ ${dist} =~ ^(28|29|30|31|32|33)$ ]]; then
+  elif [ ${os} = "fedora" ] && [[ ${dist} =~ ^(28|29|30|31|32|33|34)$ ]]; then
     echo "Setting up yum repository..."
     install_dnf
   elif ( [ ${os} = "debian" ] && [[ ${dist} =~ ^(jessie|stretch|buster|bullseye)$ ]] ) ||
