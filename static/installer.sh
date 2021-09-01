@@ -2,7 +2,7 @@
 
 set -uxo pipefail
 
-tarantool_default_version="2.5"
+tarantool_default_version="2.8"
 repo_type="live"
 repo_path=""
 repo_only=0
@@ -131,10 +131,10 @@ detect_os ()
 
 detect_ver ()
 {
-  if [ -z "${VER:-2.5}" ]; then
+  if [ -z "${VER:-2.8}" ]; then
     ver=$tarantool_default_version
   else
-    ver=${VER:-2.5}
+    ver=${VER:-2.8}
   fi
   ver_repo=$(echo $ver | tr . _)
 }
@@ -309,7 +309,7 @@ main ()
     echo "Setting up yum repository... "
     dist=7
     install_yum
-  elif [ ${os} = "fedora" ] && [[ ${dist} =~ ^(28|29|30|31|32|33)$ ]]; then
+  elif [ ${os} = "fedora" ] && [[ ${dist} =~ ^(28|29|30|31|32|33|34)$ ]]; then
     echo "Setting up yum repository..."
     install_dnf
   elif ( [ ${os} = "debian" ] && [[ ${dist} =~ ^(jessie|stretch|buster|bullseye)$ ]] ) ||
