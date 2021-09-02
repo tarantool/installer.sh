@@ -50,13 +50,6 @@ case $key in
 esac
 done
 
-
-if [ "${repo_type}" = "release" ]; then
-  repo_path="release/"
-elif [ "${repo_type}" != "live" ]; then
-  print_usage
-fi
-
 unsupported_os ()
 {
   echo "Unfortunately, your operating system is not supported by this script."
@@ -129,7 +122,39 @@ detect_os ()
   echo "Detected operating system as ${os}/${dist}."
 }
 
-detect_ver ()
+print_new_release_policy_and_exit ()
+{
+  echo "Check out our new release policy https://github.com/tarantool/tarantool/discussions/6182"
+  exit 1
+}
+
+setup_type ()
+{
+  if [ "${repo_type}" = "release" ]; then
+    if [ "${ver}" = "2" ]; then
+      repo_path="release/series-"
+    else
+      repo_path="release/"
+    fi
+  elif [ "${repo_type}" = "pre-release" ]; then
+    if [ "${ver}" = "2" ]; then
+      repo_path="pre-release/series-"
+    else
+      echo "'pre-release' repository can be set only with Tarantool series-2"
+      print_new_release_policy_and_exit
+    fi
+  elif [ "${repo_type}" = "live" ]; then
+    if [ "${ver}" = "2" ]; then
+      echo "'live repository' can't be set with Tarantool series-2"
+      print_new_release_policy_and_exit
+    fi
+  else
+    echo "Unknown repository type '${repo_type}'"
+    print_new_release_policy_and_exit
+  fi
+}
+
+setup_ver ()
 {
   if [ -z "${VER:-2.8}" ]; then
     ver=$tarantool_default_version
@@ -231,6 +256,54 @@ install_apt ()
   fi
 }
 
+install_yum_repo ()
+{
+  ARCH=$(uname -m)
+  if [ "${os}" = "centos" ]; then
+    OS_NAME="EnterpriseLinux"
+    OS_CODE="el"
+  elif [ "${os}" = "fedora" ]; then
+    OS_NAME="Fedora"
+    OS_CODE="fedora"
+  else
+    print_usage
+  fi
+  cat <<EOF > /etc/yum.repos.d/tarantool_${ver_repo}.repo
+[tarantool_${ver_repo}]
+name=${OS_NAME}-${dist} - Tarantool
+baseurl=https://download.tarantool.org/tarantool/${repo_path}${ver}/${OS_CODE}/${dist}/${ARCH}/
+gpgkey=https://download.tarantool.org/tarantool/${repo_path}${ver}/gpgkey
+repo_gpgcheck=1
+gpgcheck=0
+enabled=1
+priority=1
+
+[tarantool_${ver_repo}-source]
+name=${OS_NAME}-${dist} - Tarantool Sources
+baseurl=https://download.tarantool.org/tarantool/${repo_path}${ver}/${OS_CODE}/${dist}/SRPMS
+gpgkey=https://download.tarantool.org/tarantool/${repo_path}${ver}/gpgkey
+repo_gpgcheck=1
+gpgcheck=0
+priority=1
+
+[tarantool_modules]
+name=${OS_NAME}-${dist} - Tarantool
+baseurl=https://download.tarantool.org/tarantool/modules/${OS_CODE}/${dist}/${ARCH}/
+gpgkey=https://download.tarantool.org/tarantool/modules/gpgkey
+repo_gpgcheck=1
+gpgcheck=0
+enabled=1
+priority=1
+
+[tarantool_modules-source]
+name=${OS_NAME}-${dist} - Tarantool Sources
+baseurl=https://download.tarantool.org/tarantool/modules/${OS_CODE}/${dist}/SRPMS
+gpgkey=https://download.tarantool.org/tarantool/modules/gpgkey
+repo_gpgcheck=1
+gpgcheck=0
+EOF
+}
+
 install_yum ()
 {
 
@@ -258,10 +331,7 @@ install_yum ()
   fi
 
   rm -f /etc/yum.repos.d/*tarantool*.repo && \
-    echo -e "[tarantool_${ver_repo}]\nname=EnterpriseLinux-${dist} - Tarantool\nbaseurl=https://download.tarantool.org/tarantool/${repo_path}${ver}/el/${dist}/x86_64/\ngpgkey=https://download.tarantool.org/tarantool/${repo_path}${ver}/gpgkey\nrepo_gpgcheck=1\ngpgcheck=0\nenabled=1\npriority=1\n\n" > /etc/yum.repos.d/tarantool_${ver_repo}.repo
-    echo -e "[tarantool_${ver_repo}-source]\nname=EnterpriseLinux-${dist} - Tarantool Sources\nbaseurl=https://download.tarantool.org/tarantool/${repo_path}${ver}/el/${dist}/SRPMS\ngpgkey=https://download.tarantool.org/tarantool/${repo_path}${ver}/gpgkey\nrepo_gpgcheck=1\ngpgcheck=0\npriority=1\n\n" >> /etc/yum.repos.d/tarantool_${ver_repo}.repo
-    echo -e "[tarantool_modules]\nname=EnterpriseLinux-${dist} - Tarantool\nbaseurl=https://download.tarantool.org/tarantool/modules/el/${dist}/x86_64/\ngpgkey=https://download.tarantool.org/tarantool/modules/gpgkey\nrepo_gpgcheck=1\ngpgcheck=0\nenabled=1\npriority=1\n\n" >> /etc/yum.repos.d/tarantool_${ver_repo}.repo
-    echo -e "[tarantool_modules-source]\nname=EnterpriseLinux-${dist} - Tarantool Sources\nbaseurl=https://download.tarantool.org/tarantool/modules/el/${dist}/SRPMS\ngpgkey=https://download.tarantool.org/tarantool/modules/gpgkey\nrepo_gpgcheck=1\ngpgcheck=0" >> /etc/yum.repos.d/tarantool_${ver_repo}.repo
+    install_yum_repo
   echo "done."
 
   echo -n "Updating metadata... "
@@ -281,10 +351,7 @@ install_dnf ()
   dnf clean all
 
   rm -f /etc/yum.repos.d/*tarantool*.repo
-  echo -e "[tarantool_${ver_repo}]\nname=Fedora-${dist} - Tarantool\nbaseurl=https://download.tarantool.org/tarantool/${repo_path}${ver}/fedora/${dist}/x86_64/\ngpgkey=https://download.tarantool.org/tarantool/${repo_path}${ver}/gpgkey\nrepo_gpgcheck=1\ngpgcheck=0\nenabled=1\npriority=1\n\n" > /etc/yum.repos.d/tarantool_${ver_repo}.repo
-  echo -e "[tarantool_${ver_repo}-source]\nname=Fedora-${dist} - Tarantool Sources\nbaseurl=https://download.tarantool.org/tarantool/${repo_path}${ver}/fedora/${dist}/SRPMS\ngpgkey=https://download.tarantool.org/tarantool/${repo_path}${ver}/gpgkey\nrepo_gpgcheck=1\ngpgcheck=0\npriority=1\n\n" >> /etc/yum.repos.d/tarantool_${ver_repo}.repo
-  echo -e "[tarantool_modules]\nname=Fedora-${dist} - Tarantool\nbaseurl=https://download.tarantool.org/tarantool/modules/fedora/${dist}/x86_64/\ngpgkey=https://download.tarantool.org/tarantool/modules/gpgkey\nrepo_gpgcheck=1\ngpgcheck=0\nenabled=1\npriority=1\n\n" >> /etc/yum.repos.d/tarantool_${ver_repo}.repo
-  echo -e "[tarantool_modules-source]\nname=Fedora-${dist} - Tarantool Sources\nbaseurl=https://download.tarantool.org/tarantool/modules/fedora/${dist}/SRPMS\ngpgkey=https://download.tarantool.org/tarantool/modules/gpgkey\nrepo_gpgcheck=1\ngpgcheck=0" >> /etc/yum.repos.d/tarantool_${ver_repo}.repo
+  install_yum_repo
 
   echo -n "Updating metadata... "
   dnf -q makecache -y --disablerepo='*' --enablerepo="tarantool_${ver_repo}" --enablerepo="tarantool_modules"
@@ -301,7 +368,9 @@ install_dnf ()
 main ()
 {
   detect_os
-  detect_ver
+  setup_ver
+  setup_type
+
   if [ ${os} = "centos" ] && [[ ${dist} =~ ^(6|7|8)$ ]]; then
     echo "Setting up yum repository... "
     install_yum
