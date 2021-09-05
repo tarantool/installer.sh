@@ -259,7 +259,7 @@ install_apt ()
 install_yum_repo ()
 {
   ARCH=$(uname -m)
-  if [ "${os}" = "centos" ]; then
+  if [[ "${os}" =~ ^(centos|amzn)$ ]]; then
     OS_NAME="EnterpriseLinux"
     OS_CODE="el"
   elif [ "${os}" = "fedora" ]; then
