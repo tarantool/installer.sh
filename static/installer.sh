@@ -251,9 +251,6 @@ install_apt ()
 
   echo
   echo "Tarantool ${ver} is ready to be installed"
-  if [ "$repo_only" = 0 ]; then
-    apt-get install -y tarantool
-  fi
 }
 
 install_yum_repo ()
@@ -340,10 +337,6 @@ install_yum ()
 
   echo
   echo "Tarantool ${ver} is ready to be installed"
-
-  if [ "$repo_only" = 0 ]; then
-    yum install -y tarantool
-  fi
 }
 
 install_dnf ()
@@ -359,10 +352,6 @@ install_dnf ()
 
   echo
   echo "Tarantool ${ver} is ready to be installed"
-
-  if [ "$repo_only" = 0 ]; then
-    dnf install -y tarantool
-  fi
 }
 
 main ()
