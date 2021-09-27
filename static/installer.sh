@@ -245,6 +245,8 @@ install_apt ()
   echo "deb-src https://download.tarantool.org/tarantool/modules/${os}/ ${dist} main" >> ${apt_source_path}
   mkdir -p /etc/apt/preferences.d/
   echo -e "Package: tarantool\nPin: origin download.tarantool.org\nPin-Priority: 1001" > /etc/apt/preferences.d/tarantool
+  echo -e "\nPackage: tarantool-common\nPin: origin download.tarantool.org\nPin-Priority: 1001" >> /etc/apt/preferences.d/tarantool
+  echo -e "\nPackage: tarantool-dev\nPin: origin download.tarantool.org\nPin-Priority: 1001" >> /etc/apt/preferences.d/tarantool
   echo "The repository is setup! Tarantool can now be installed."
 
   apt_update
