@@ -56,6 +56,8 @@ detect_os ()
           dist="eoan"
         elif [ $ver_id = "20.04" ]; then
           dist="focal"
+        elif [ $ver_id = "20.10" ]; then
+          dist="groovy"
         elif [ $ver_id = "21.04" ]; then
           dist="hirsute"
         elif [ $ver_id = "21.10" ]; then
@@ -367,7 +369,7 @@ main ()
     echo "Setting up yum repository..."
     install_dnf
   elif ( [ ${os} = "debian" ] && [[ ${dist} =~ ^(jessie|stretch|buster|bullseye)$ ]] ) ||
-       ( [ ${os} = "ubuntu" ] && [[ ${dist} =~ ^(trusty|xenial|bionic|cosmic|disco|eoan|focal|hirsute|impish)$ ]] ); then
+       ( [ ${os} = "ubuntu" ] && [[ ${dist} =~ ^(trusty|xenial|bionic|cosmic|disco|eoan|focal|groovy|hirsute|impish)$ ]] ); then
 
     echo
     echo "################################"
