@@ -2,12 +2,13 @@
 
 set -uxo pipefail
 
-tarantool_default_version="2.8"
+tarantool_default_version="2"
 repo_type="live"
 repo_path=""
 repo_only=0
 os=""
 dist=""
+gc64=""
 
 print_usage ()
 {
@@ -102,6 +103,8 @@ detect_os ()
           dist="hirsute"
         elif [ $ver_id = "21.10" ]; then
           dist="impish"
+        elif [ $ver_id = "22.04" ]; then
+          dist="jammy"
         else
           unsupported_os
         fi
@@ -162,10 +165,15 @@ setup_type ()
 
 setup_ver ()
 {
-  if [ -z "${VER:-2.8}" ]; then
+  ARCH=$(uname -m)
+  if [ "${ARCH}" = "x86_64" ] && [ "${GC64:-false}" = "true" ]; then
+    echo "GC64 will be used"
+    gc64="-gc64"
+  fi
+  if [ -z "${VER:-2}" ]; then
     ver=$tarantool_default_version
   else
-    ver=${VER:-2.8}
+    ver=${VER:-2}
   fi
   ver_repo=$(echo $ver | tr . _)
 }
@@ -245,8 +253,8 @@ install_apt ()
   echo "done."
 
   rm -f /etc/apt/sources.list.d/*tarantool*.list
-  echo "deb https://download.tarantool.org/tarantool/${repo_path}${ver}/${os}/ ${dist} main" > ${apt_source_path}
-  echo "deb-src https://download.tarantool.org/tarantool/${repo_path}${ver}/${os}/ ${dist} main" >> ${apt_source_path}
+  echo "deb https://download.tarantool.org/tarantool/${repo_path}${ver}${gc64}/${os}/ ${dist} main" > ${apt_source_path}
+  echo "deb-src https://download.tarantool.org/tarantool/${repo_path}${ver}${gc64}/${os}/ ${dist} main" >> ${apt_source_path}
   echo "deb https://download.tarantool.org/tarantool/modules/${os}/ ${dist} main" >> ${apt_source_path}
   echo "deb-src https://download.tarantool.org/tarantool/modules/${os}/ ${dist} main" >> ${apt_source_path}
   mkdir -p /etc/apt/preferences.d/
@@ -263,7 +271,6 @@ install_apt ()
 
 install_yum_repo ()
 {
-  ARCH=$(uname -m)
   if [[ "${os}" =~ ^(centos|amzn)$ ]]; then
     OS_NAME="EnterpriseLinux"
     OS_CODE="el"
@@ -276,8 +283,8 @@ install_yum_repo ()
   cat <<EOF > /etc/yum.repos.d/tarantool_${ver_repo}.repo
 [tarantool_${ver_repo}]
 name=${OS_NAME}-${dist} - Tarantool
-baseurl=https://download.tarantool.org/tarantool/${repo_path}${ver}/${OS_CODE}/${dist}/${ARCH}/
-gpgkey=https://download.tarantool.org/tarantool/${repo_path}${ver}/gpgkey
+baseurl=https://download.tarantool.org/tarantool/${repo_path}${ver}${gc64}/${OS_CODE}/${dist}/${ARCH}/
+gpgkey=https://download.tarantool.org/tarantool/${repo_path}${ver}${gc64}/gpgkey
 repo_gpgcheck=1
 gpgcheck=0
 enabled=1
@@ -285,8 +292,8 @@ priority=1
 
 [tarantool_${ver_repo}-source]
 name=${OS_NAME}-${dist} - Tarantool Sources
-baseurl=https://download.tarantool.org/tarantool/${repo_path}${ver}/${OS_CODE}/${dist}/SRPMS
-gpgkey=https://download.tarantool.org/tarantool/${repo_path}${ver}/gpgkey
+baseurl=https://download.tarantool.org/tarantool/${repo_path}${ver}${gc64}/${OS_CODE}/${dist}/SRPMS
+gpgkey=https://download.tarantool.org/tarantool/${repo_path}${ver}${gc64}/gpgkey
 repo_gpgcheck=1
 gpgcheck=0
 priority=1
@@ -375,11 +382,11 @@ main ()
     echo "Setting up yum repository... "
     dist=7
     install_yum
-  elif [ ${os} = "fedora" ] && [[ ${dist} =~ ^(28|29|30|31|32|33|34)$ ]]; then
+  elif [ ${os} = "fedora" ] && [[ ${dist} =~ ^(28|29|30|31|32|33|34|35|36)$ ]]; then
     echo "Setting up yum repository..."
     install_dnf
   elif ( [ ${os} = "debian" ] && [[ ${dist} =~ ^(jessie|stretch|buster|bullseye)$ ]] ) ||
-       ( [ ${os} = "ubuntu" ] && [[ ${dist} =~ ^(trusty|xenial|bionic|cosmic|disco|eoan|focal|groovy|hirsute|impish)$ ]] ); then
+       ( [ ${os} = "ubuntu" ] && [[ ${dist} =~ ^(trusty|xenial|bionic|cosmic|disco|eoan|focal|groovy|hirsute|impish|jammy)$ ]] ); then
     echo "Setting up apt repository... "
     install_apt
   else
