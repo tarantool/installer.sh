@@ -29,7 +29,7 @@ detect_os ()
       os_like=$(. /etc/os-release && echo $ID_LIKE)
       [[ $os_like = "ubuntu" ]] && os="ubuntu"
 
-      if [ $os = "debian" ]; then
+      if ( [ $os = "debian" ] ) || ( [ $os = "devuan" ] ); then
         dist=$(echo $(. /etc/os-release && echo $VERSION) | sed 's/^[[:digit:]]\+ (\(.*\))$/\1/')
         if [ -z "$dist" ]; then
           if grep -q "bullseye"* /etc/debian_version; then
@@ -377,12 +377,23 @@ main ()
     echo "Setting up yum repository..."
     install_dnf
   elif ( [ ${os} = "debian" ] && [[ ${dist} =~ ^(jessie|stretch|buster|bullseye)$ ]] ) ||
+       ( [ ${os} = "devuan" ] && [[ ${dist} =~ ^(jessie|ascii|beowulf|chimaera)$ ]] ) ||
        ( [ ${os} = "ubuntu" ] && [[ ${dist} =~ ^(trusty|xenial|bionic|cosmic|disco|eoan|focal|groovy|hirsute|impish|jammy)$ ]] ); then
 
     echo
     echo "################################"
     echo "# Setting up apt repository... #"
     echo "################################"
+    # redirect devuan to debian repos
+    if [ ${os} = "devuan" ]; then
+	case ${dist} in
+	    ascii) ddist=stretch ;;
+	    beowulf) ddist=buster ;;
+	    chimaera) ddist=bullseye ;;
+	esac
+	dist=${ddist}
+	os=debian
+    fi
     install_apt
   else
     unsupported_os
