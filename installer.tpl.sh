@@ -29,14 +29,14 @@ detect_os ()
       os_like=$(. /etc/os-release && echo $ID_LIKE)
       [[ $os_like = "ubuntu" ]] && os="ubuntu"
 
-      if ( [ $os = "debian" ] ); then
+      if [ $os = "debian" ]; then
         dist=$(echo $(. /etc/os-release && echo $VERSION) | sed 's/^[[:digit:]]\+ (\(.*\))$/\1/')
         if [ -z "$dist" ]; then
           if grep -q "bullseye"* /etc/debian_version; then
             dist="bullseye"
           fi
         fi
-      elif ( [ $os = "devuan" ] ); then
+      elif [ $os = "devuan" ]; then
         dist=$(echo $(. /etc/os-release && echo $VERSION) | sed 's/^[[:digit:]]\+ (\(.*\))$/\1/')
         if [ -z "$dist" ]; then
           if grep -q "bullseye"* /etc/debian_version; then
