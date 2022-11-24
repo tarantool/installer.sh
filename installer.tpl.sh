@@ -36,6 +36,21 @@ detect_os ()
             dist="bullseye"
           fi
         fi
+      elif [ $os = "devuan" ]; then
+        dist=$(echo $(. /etc/os-release && echo $VERSION) | sed 's/^[[:digit:]]\+ (\(.*\))$/\1/')
+        if [ -z "$dist" ]; then
+          if grep -q "bullseye"* /etc/debian_version; then
+            dist="bullseye"
+          fi
+        else
+          case ${dist} in
+              ascii) ddist=stretch ;;
+              beowulf) ddist=buster ;;
+              chimaera) ddist=bullseye ;;
+          esac
+          dist=${ddist}
+        fi
+        os="debian"
       elif [ $os = "ubuntu" ]; then
         ver_id=$(. /etc/os-release && echo $VERSION_ID)
 

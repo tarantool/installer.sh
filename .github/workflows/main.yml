@@ -15,6 +15,7 @@ jobs:
           - "fedora:34"
           - "debian:bullseye"
           - "ubuntu:focal"
+          - "dyne/devuan:chimaera"
         type: [ "pre-release", "release" ]
         version: ["1.10", "2"]
         build-type: [ "", "gc64" ]
