@@ -3,7 +3,7 @@
 set -o pipefail
 
 if [ $EUID != 0 ]; then
-    sudo bash "$0" "$@"
+    sudo "$0" "$@"
     exit $?
 fi
 
