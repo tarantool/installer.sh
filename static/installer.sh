@@ -160,21 +160,21 @@ print_new_release_policy_and_exit ()
 setup_type ()
 {
   if [ "${repo_type}" = "release" ]; then
-    if [ "${ver}" = "2" ]; then
+    if [ "${ver}" -ge "2" ] 2> /dev/null; then
       repo_path="release/series-"
     else
       repo_path="release/"
     fi
   elif [ "${repo_type}" = "pre-release" ]; then
-    if [ "${ver}" = "2" ]; then
+    if [ "${ver}" -ge "2" ] 2> /dev/null; then
       repo_path="pre-release/series-"
     else
-      echo "'pre-release' repository can be set only with Tarantool series-2"
+      echo "'pre-release' repository can be set up only with Tarantool series-N, where N = 2, 3, etc."
       print_new_release_policy_and_exit
     fi
   elif [ "${repo_type}" = "live" ]; then
-    if [ "${ver}" = "2" ]; then
-      echo "'live repository' can't be set with Tarantool series-2"
+    if [ "${ver}" -ge "2" ] 2> /dev/null; then
+      echo "'live' repository cannot be set up with Tarantool series-${ver}"
       print_new_release_policy_and_exit
     fi
   else
@@ -273,8 +273,19 @@ install_apt ()
   echo "done."
 
   rm -f /etc/apt/sources.list.d/*tarantool*.list
-  echo "deb https://download.tarantool.org/tarantool/${repo_path}${ver}${gc64}/${os}/ ${dist} main" > ${apt_source_path}
-  echo "deb-src https://download.tarantool.org/tarantool/${repo_path}${ver}${gc64}/${os}/ ${dist} main" >> ${apt_source_path}
+
+  # Since series-3 we use static builds and we can use one repository
+  # for all deb-based and rpm-based systems.
+  if [ "${ver}" -ge "3" ] 2> /dev/null; then
+    dist_path="${repo_path}${ver}/linux-deb"
+    dist_ver="static"
+  else
+    dist_path="${repo_path}${ver}${gc64}/${os}"
+    dist_ver="${dist}"
+  fi
+
+  echo "deb https://download.tarantool.org/tarantool/${dist_path}/ ${dist_ver} main" > ${apt_source_path}
+  echo "deb-src https://download.tarantool.org/tarantool/${dist_path}/ ${dist_ver} main" >> ${apt_source_path}
   echo "deb https://download.tarantool.org/tarantool/modules/${os}/ ${dist} main" >> ${apt_source_path}
   echo "deb-src https://download.tarantool.org/tarantool/modules/${os}/ ${dist} main" >> ${apt_source_path}
   mkdir -p /etc/apt/preferences.d/
@@ -300,11 +311,26 @@ install_yum_repo ()
   else
     print_usage
   fi
+
+  # Since series-3 we use static builds and we can use one repository
+  # for all deb-based and rpm-based systems.
+  if [ "${ver}" -ge "3" ] 2> /dev/null; then
+    repo_ver_path="${repo_path}${ver}"
+    dist_code="linux-rpm"
+    dist_ver="static"
+    source_enabled="0" # for now source packages for series-3 are not available
+  else
+    repo_ver_path="${repo_path}${ver}${gc64}"
+    dist_code="${OS_CODE}"
+    dist_ver="${dist}"
+    source_enabled="1"
+  fi
+
   cat <<EOF > /etc/yum.repos.d/tarantool_${ver_repo}.repo
 [tarantool_${ver_repo}]
 name=${OS_NAME}-${dist} - Tarantool
-baseurl=https://download.tarantool.org/tarantool/${repo_path}${ver}${gc64}/${OS_CODE}/${dist}/${ARCH}/
-gpgkey=https://download.tarantool.org/tarantool/${repo_path}${ver}${gc64}/gpgkey
+baseurl=https://download.tarantool.org/tarantool/${repo_ver_path}/${dist_code}/${dist_ver}/${ARCH}/
+gpgkey=https://download.tarantool.org/tarantool/${repo_ver_path}/gpgkey
 repo_gpgcheck=1
 gpgcheck=0
 enabled=1
@@ -312,10 +338,11 @@ priority=1
 
 [tarantool_${ver_repo}-source]
 name=${OS_NAME}-${dist} - Tarantool Sources
-baseurl=https://download.tarantool.org/tarantool/${repo_path}${ver}${gc64}/${OS_CODE}/${dist}/SRPMS
-gpgkey=https://download.tarantool.org/tarantool/${repo_path}${ver}${gc64}/gpgkey
+baseurl=https://download.tarantool.org/tarantool/${repo_ver_path}/${dist_code}/${dist_ver}/SRPMS
+gpgkey=https://download.tarantool.org/tarantool/${repo_ver_path}/gpgkey
 repo_gpgcheck=1
 gpgcheck=0
+enabled=${source_enabled}
 priority=1
 
 [tarantool_modules]
