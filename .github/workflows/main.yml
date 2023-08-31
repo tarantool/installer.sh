@@ -24,6 +24,25 @@ jobs:
             version: "1.10"
           - version: "1.10"
             build-type: "gc64"
+        include:
+          # At the moment of writting there is only 2.11.1 release
+          # with packages for Debian Bookworm.
+          - image: "debian:bookworm"
+            type: "release"
+            version: "2"
+            build-type: ""
+          - image: "debian:bookworm"
+            type: "release"
+            version: "2"
+            build-type: "gc64"
+          - image: "dyne/devuan:daedalus"
+            type: "release"
+            version: "2"
+            build-type: ""
+          - image: "dyne/devuan:daedalus"
+            type: "release"
+            version: "2"
+            build-type: "gc64"
 
     env:
       INSTALLER: installer.sh
