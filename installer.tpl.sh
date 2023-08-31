@@ -37,7 +37,11 @@ detect_os ()
           fi
         fi
       elif [ $os = "devuan" ]; then
-        dist=$(echo $(. /etc/os-release && echo $VERSION) | sed 's/^[[:digit:]]\+ (\(.*\))$/\1/')
+        # $ docker run -it dyne/devuan:chimaera grep VERSION= /etc/os-release
+        # VERSION="4 (chimaera)"
+        # $ docker run -it dyne/devuan:daedalus grep VERSION= /etc/os-release
+        # VERSION="5 (daedalus/ceres)"
+        dist=$(echo $(. /etc/os-release && echo $VERSION) | sed 's/^[[:digit:]]\+ (\([^/]*\)\(\/.*\)\?)$/\1/')
         if [ -z "$dist" ]; then
           if grep -q "bullseye"* /etc/debian_version; then
             dist="bullseye"
@@ -47,6 +51,7 @@ detect_os ()
               ascii) ddist=stretch ;;
               beowulf) ddist=buster ;;
               chimaera) ddist=bullseye ;;
+              daedalus) ddist=bookworm ;;
           esac
           dist=${ddist}
         fi
@@ -391,7 +396,7 @@ main ()
   elif [ ${os} = "fedora" ] && [[ ${dist} =~ ^(28|29|30|31|32|33|34|35|36)$ ]]; then
     echo "Setting up yum repository..."
     install_dnf
-  elif ( [ ${os} = "debian" ] && [[ ${dist} =~ ^(jessie|stretch|buster|bullseye)$ ]] ) ||
+  elif ( [ ${os} = "debian" ] && [[ ${dist} =~ ^(jessie|stretch|buster|bullseye|bookworm)$ ]] ) ||
        ( [ ${os} = "ubuntu" ] && [[ ${dist} =~ ^(trusty|xenial|bionic|cosmic|disco|eoan|focal|groovy|hirsute|impish|jammy)$ ]] ); then
 
     echo
