@@ -43,6 +43,16 @@ jobs:
             type: "release"
             version: "2"
             build-type: "gc64"
+          # At the moment of writting there is only 2.11.1 release
+          # with packages for Fedora 37.
+          - image: "fedora:37"
+            type: "release"
+            version: "2"
+            build-type: ""
+          - image: "fedora:37"
+            type: "release"
+            version: "2"
+            build-type: "gc64"
 
     env:
       INSTALLER: installer.sh
