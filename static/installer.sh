@@ -402,7 +402,7 @@ main ()
     echo "Setting up yum repository... "
     dist=7
     install_yum
-  elif [ ${os} = "fedora" ] && [[ ${dist} =~ ^(28|29|30|31|32|33|34|35|36|37)$ ]]; then
+  elif [ ${os} = "fedora" ] && [[ ${dist} =~ ^(28|29|30|31|32|33|34|35|36|37|38)$ ]]; then
     echo "Setting up yum repository..."
     install_dnf
   elif ( [ ${os} = "debian" ] && [[ ${dist} =~ ^(jessie|stretch|buster|bullseye|bookworm)$ ]] ) ||
