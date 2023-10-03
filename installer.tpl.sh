@@ -21,8 +21,13 @@ detect_os ()
 {
   if [[ ( -z "${os}" ) && ( -z "${dist}" ) ]]; then
     if [ -e /etc/centos-release ]; then
-      os="centos"
-      dist=$(grep -Po "[6-9]" /etc/centos-release | head -1)
+      if [ -n "$(grep "RED OS" /etc/centos-release)" ]; then
+        os="redos"
+        dist=$(grep -Po "[6-9].[0-9]" /etc/centos-release)
+      else
+        os="centos"
+        dist=$(grep -Po "[6-9]" /etc/centos-release | head -1)
+      fi
     elif [ -e /etc/os-release ]; then
       os=$(. /etc/os-release && echo $ID)
       # fix for UBUNTU like systems
@@ -95,6 +100,8 @@ detect_os ()
         if [ $dist != "2" ]; then
           unsupported_os
         fi
+      else
+        unsupported_os
       fi
     else
       unsupported_os
@@ -276,9 +283,15 @@ install_yum_repo ()
   if [[ "${os}" =~ ^(centos|amzn)$ ]]; then
     OS_NAME="EnterpriseLinux"
     OS_CODE="el"
+    modules_enabled="1"
   elif [ "${os}" = "fedora" ]; then
     OS_NAME="Fedora"
     OS_CODE="fedora"
+    modules_enabled="1"
+  elif [ "${os}" = "redos" ]; then
+    OS_NAME="RedOS"
+    OS_CODE="redos"
+    modules_enabled="0" # for now modules for RedOS are not available
   else
     exit 1
   fi
@@ -322,7 +335,7 @@ baseurl=https://download.tarantool.org/tarantool/modules/${OS_CODE}/${dist}/${AR
 gpgkey=https://download.tarantool.org/tarantool/modules/gpgkey
 repo_gpgcheck=1
 gpgcheck=0
-enabled=1
+enabled=${modules_enabled}
 priority=1
 
 [tarantool_modules-source]
@@ -331,6 +344,7 @@ baseurl=https://download.tarantool.org/tarantool/modules/${OS_CODE}/${dist}/SRPM
 gpgkey=https://download.tarantool.org/tarantool/modules/gpgkey
 repo_gpgcheck=1
 gpgcheck=0
+enabled=${modules_enabled}
 EOF
 }
 
@@ -342,29 +356,32 @@ install_yum ()
   echo "#########################"
   yum clean all
 
-  echo
-  echo "#################################"
-  echo "# Installing EPEL repository... #"
-  echo "#################################"
+  if [ $os = "centos" ]; then
+    echo
+    echo "#################################"
+    echo "# Installing EPEL repository... #"
+    echo "#################################"
 
-  if [ $dist = 6 ]; then
-    curl https://www.getpagespeed.com/files/centos6-eol.repo --output /etc/yum.repos.d/CentOS-Base.repo
-    yum install -y epel-release
-  else
-    yum -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-${dist}.noarch.rpm
-  fi
+    if [ $dist = 6 ]; then
+      curl https://www.getpagespeed.com/files/centos6-eol.repo --output /etc/yum.repos.d/CentOS-Base.repo
+      yum install -y epel-release
+    else
+      yum -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-${dist}.noarch.rpm
+    fi
 
-  if [ $dist != 8 ]; then
-    yum -y install yum-priorities
-  fi
+    if [ $dist != 8 ]; then
+      yum -y install yum-priorities
+    fi
 
-  echo
-  echo "#####################################"
-  echo "# Setting up tarantool EPEL repo... #"
-  echo "#####################################"
-  if [ -e /etc/yum.repos.d/epel.repo ]; then
-    sed 's/enabled=.*/enabled=1/g' -i /etc/yum.repos.d/epel.repo
+    echo
+    echo "#####################################"
+    echo "# Setting up tarantool EPEL repo... #"
+    echo "#####################################"
+    if [ -e /etc/yum.repos.d/epel.repo ]; then
+      sed 's/enabled=.*/enabled=1/g' -i /etc/yum.repos.d/epel.repo
+    fi
   fi
+  
   rm -f /etc/yum.repos.d/*tarantool*.repo && \
     install_yum_repo
 
@@ -372,7 +389,14 @@ install_yum ()
   echo "########################"
   echo "# Updating metadata... #"
   echo "########################"
-  yum makecache -y --disablerepo='*' --enablerepo="tarantool_${ver_repo}" --enablerepo="tarantool_modules" --enablerepo='epel'
+  if [ $os = "centos" ]; then
+    yum makecache -y --disablerepo='*' --enablerepo="tarantool_${ver_repo}" --enablerepo="tarantool_modules" --enablerepo='epel'
+  elif [ $os = "redos" ]; then
+    # RedOS doesn't support epel repo
+    yum makecache -y --disablerepo='*' --enablerepo="tarantool_${ver_repo}"
+  else
+    unsupported_os
+  fi
 
   echo
   echo "Tarantool ${ver} is ready to be installed by 'yum install -y tarantool'"
@@ -418,6 +442,9 @@ main ()
   elif [ ${os} = "amzn" ] && [[ ${dist} = 2 ]]; then
     echo "Setting up yum repository... "
     dist=7
+    install_yum
+  elif [ ${os} = "redos" ] && [[ ${dist} = "7.3" ]]; then
+    echo "Setting up yum repository... "
     install_yum
   elif [ ${os} = "fedora" ] && [[ ${dist} =~ ^(28|29|30|31|32|33|34|35|36|37|38)$ ]]; then
     echo "Setting up yum repository..."
