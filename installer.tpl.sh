@@ -356,7 +356,7 @@ install_yum ()
   echo "#########################"
   yum clean all
 
-  if [ $os = "centos" ]; then
+  if [ $os = "centos" ] || [ $os = "amzn" ]; then
     echo
     echo "#################################"
     echo "# Installing EPEL repository... #"
@@ -389,7 +389,7 @@ install_yum ()
   echo "########################"
   echo "# Updating metadata... #"
   echo "########################"
-  if [ $os = "centos" ]; then
+  if [ $os = "centos" ] || [ $os = "amzn" ]; then
     yum makecache -y --disablerepo='*' --enablerepo="tarantool_${ver_repo}" --enablerepo="tarantool_modules" --enablerepo='epel'
   elif [ $os = "redos" ]; then
     # RedOS doesn't support epel repo
