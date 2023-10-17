@@ -73,6 +73,14 @@ jobs:
             type: "release"
             version: "2"
             build-type: "gc64"
+          - image: amazonlinux:2
+            type: "release"
+            version: "2"
+            build-type: "gc64"
+          - image: amazonlinux:2
+            type: "release"
+            version: "2"
+            build-type: ""
 
     env:
       INSTALLER: installer.sh
