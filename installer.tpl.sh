@@ -428,7 +428,7 @@ install_dnf ()
   echo "Tarantool ${ver} is ready to be installed by 'dnf install -y tarantool'"
 
   if [[ ${FORCE_INSTALL_TARANTOOL:-False} = "True" ]]; then
-    yum -y install tarantool
+    dnf -y install tarantool
   fi
 
 }
