@@ -1,0 +1,46 @@
+name: Test installers (static repository)
+  
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test-installers-static:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        image:
+          - "centos:7"
+          - "fedora:40"
+          - "debian:bookworm"
+          - "ubuntu:jammy"
+          - "dyne/devuan:chimaera"
+          - "packpack/packpack:redos-7.3"
+          - "registry.astralinux.ru/library/alse:1.7"
+          - "almalinux:9"
+          - "opensuse/leap"
+        version: [ "3" ]
+        type: [ "pre-release", "release" ]
+
+    env:
+      INSTALLER: installer.sh
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Setup Python environment
+      uses: actions/setup-python@v5
+
+    - name: Setup Python requirements
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Create Installer
+      run: ./mkinstaller.py ${{ matrix.type }} ${{ matrix.version }}
+
+    - name: Set up Tarantool in docker
+      run: docker run --rm -v $(pwd):/app -e FORCE_INSTALL_TARANTOOL=True ${{ matrix.image }} sh -c "bash /app/${{ env.INSTALLER }}; tarantool --version;"
