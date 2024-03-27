@@ -6,11 +6,22 @@ from jinja2 import Template
 
 
 if __name__ == "__main__":
-    repo_type = sys.argv[1]
-    ver = sys.argv[2]
+    if len(sys.argv) != 3:
+        print("Usage: mkinstaller.py <repo_type> <tarantool_version>")
+        sys.exit(1)
+    else:
+        repo_type = sys.argv[1]
+        ver = sys.argv[2]
 
-    with open("installer.tpl.sh", 'r') as file:
-        template = Template(file.read())
+    if ver >= "1" and ver < "3":
+        with open("installer.tpl.sh", 'r') as file:
+            template = Template(file.read())
+    elif ver >= "3":
+        with open("installer-static.tpl.sh", 'r') as file:
+            template = Template(file.read())
+    else:
+        print('Wrong version')
+        exit(1)
 
     installer = template.render({
         'tarantool_version': ver,
