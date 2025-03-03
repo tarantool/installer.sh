@@ -90,6 +90,8 @@ detect_os ()
           dist="impish"
         elif [ $ver_id = "22.04" ]; then
           dist="jammy"
+        elif [ $ver_id = "24.04" ]; then
+          dist="noble"
         else
           unsupported_os
         fi
@@ -381,7 +383,7 @@ install_yum ()
       sed 's/enabled=.*/enabled=1/g' -i /etc/yum.repos.d/epel.repo
     fi
   fi
-  
+
   rm -f /etc/yum.repos.d/*tarantool*.repo && \
     install_yum_repo
 
@@ -455,7 +457,7 @@ main ()
     echo "Setting up yum repository..."
     install_dnf
   elif ( [ ${os} = "debian" ] && [[ ${dist} =~ ^(jessie|stretch|buster|bullseye|bookworm)$ ]] ) ||
-       ( [ ${os} = "ubuntu" ] && [[ ${dist} =~ ^(trusty|xenial|bionic|cosmic|disco|eoan|focal|groovy|hirsute|impish|jammy)$ ]] ); then
+       ( [ ${os} = "ubuntu" ] && [[ ${dist} =~ ^(trusty|xenial|bionic|cosmic|disco|eoan|focal|groovy|hirsute|impish|jammy|noble)$ ]] ); then
 
     echo
     echo "################################"
