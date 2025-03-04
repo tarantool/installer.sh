@@ -130,6 +130,8 @@ detect_os ()
           dist="impish"
         elif [ $ver_id = "22.04" ]; then
           dist="jammy"
+        elif [ $ver_id = "24.04" ]; then
+          dist="noble"
         else
           unsupported_os
         fi
@@ -463,7 +465,7 @@ main ()
     echo "Setting up yum repository..."
     install_dnf
   elif ( [ ${os} = "debian" ] && [[ ${dist} =~ ^(jessie|stretch|buster|bullseye|bookworm)$ ]] ) ||
-       ( [ ${os} = "ubuntu" ] && [[ ${dist} =~ ^(trusty|xenial|bionic|cosmic|disco|eoan|focal|groovy|hirsute|impish|jammy)$ ]] ); then
+       ( [ ${os} = "ubuntu" ] && [[ ${dist} =~ ^(trusty|xenial|bionic|cosmic|disco|eoan|focal|groovy|hirsute|impish|jammy|noble)$ ]] ); then
     echo "Setting up apt repository... "
     install_apt
   else
