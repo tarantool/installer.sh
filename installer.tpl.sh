@@ -102,6 +102,8 @@ detect_os ()
         if [ $dist != "2" ]; then
           unsupported_os
         fi
+      elif [ $os = "almalinux" ]; then
+        dist=$(. /etc/os-release && echo ${VERSION_ID%%.*})
       else
         unsupported_os
       fi
@@ -294,6 +296,10 @@ install_yum_repo ()
     OS_NAME="RedOS"
     OS_CODE="redos"
     modules_enabled="0" # for now modules for RedOS are not available
+  elif [ "${os}" = "almalinux" ]; then
+    OS_NAME="AlmaLinux"
+    OS_CODE="almalinux"
+    modules_enabled=1
   else
     exit 1
   fi
@@ -420,11 +426,10 @@ install_dnf ()
   echo "########################"
   echo "# Updating metadata... #"
   echo "########################"
-  if [ $os = "redos" ]; then
-    # RedOS doesn't support tarantool_modules repo
-    dnf -q makecache -y --disablerepo='*' --enablerepo="tarantool_${ver_repo}"
-  else
+  if [ "${modules_enabled}" = "1" ]; then
     dnf -q makecache -y --disablerepo='*' --enablerepo="tarantool_${ver_repo}" --enablerepo="tarantool_modules"
+  else
+    dnf -q makecache -y --disablerepo='*' --enablerepo="tarantool_${ver_repo}"
   fi
 
   echo "Tarantool ${ver} is ready to be installed by 'dnf install -y tarantool'"
@@ -452,6 +457,9 @@ main ()
     install_yum
   elif [ ${os} = "redos" ] && [[ ${dist} = "7.3" ]]; then
     echo "Setting up yum repository... "
+    install_dnf
+  elif [ ${os} = "almalinux" ]; then
+    echo "Setting up dnf repository..."
     install_dnf
   elif [ ${os} = "fedora" ] && [[ ${dist} =~ ^(28|29|30|31|32|33|34|35|36|37|38)$ ]]; then
     echo "Setting up yum repository..."
