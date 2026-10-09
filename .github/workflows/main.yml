@@ -11,9 +11,7 @@ jobs:
       fail-fast: false
       matrix:
         image:
-          - "centos:8"
           - "fedora:34"
-          - "debian:bullseye"
           - "ubuntu:focal"
           - "ubuntu:jammy"
           - "ubuntu:noble"
@@ -102,19 +100,6 @@ jobs:
 
     - name: Create Installer
       run: ./mkinstaller.py ${{ matrix.type }} ${{ matrix.version }}
-
-    - name: Workaround for Centos 8
-      if: matrix.image == 'centos:8'
-      run: |
-        cat > installer_centos_8.sh << EOL
-        #!/usr/bin/env bash
-        find /etc/yum.repos.d/ -type f -exec sed -i 's/mirrorlist=/#mirrorlist=/g' {} +
-        find /etc/yum.repos.d/ -type f -exec sed -i 's/#baseurl=/baseurl=/g' {} +
-        find /etc/yum.repos.d/ -type f -exec sed -i 's/mirror.centos.org/vault.centos.org/g' {} +
-        source /app/installer.sh
-        EOL
-        chmod +x installer_centos_8.sh
-        echo "INSTALLER=installer_centos_8.sh" >> $GITHUB_ENV
 
     - name: Set up Tarantool in docker
       env:
