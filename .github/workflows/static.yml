@@ -12,7 +12,6 @@ jobs:
       fail-fast: false
       matrix:
         image:
-          - "centos:7"
           - "fedora:40"
           - "debian:bookworm"
           - "ubuntu:jammy"
