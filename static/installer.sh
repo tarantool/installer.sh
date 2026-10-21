@@ -328,7 +328,7 @@ install_yum_repo ()
   elif [ "${os}" = "almalinux" ]; then
     OS_NAME="AlmaLinux"
     OS_CODE="almalinux"
-    modules_enabled=1
+    modules_enabled=0 # for now modules for Almalinux are not available
   else
     print_usage
   fi
